@@ -1,48 +1,57 @@
 package config
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
-	"strconv"
 )
 
 type Config struct {
-	Addr             string
-	SQLServer        string
-	SQLDatabase      string
-	SQLUser          string
-	SQLPassword      string
-	QASDomain        string
-	QASSuffix        string
-	QASUser          string
-	QASPassword      string
-	CacheTTLSeconds  int
-	RefreshLeaseSecs int
-	AuthHeader       string
-	AuthSecret       string
-	ServerNumber     string
-	SystemVersion    string
+	Addr             string            `json:"addr"`
+	SystemVersion    string            `json:"system_version"`
+	ServerNumber     string            `json:"server_number"`
+	SQLServer        string            `json:"sql_server"`
+	SQLDatabase      string            `json:"sql_database"`
+	CacheTime        int               `json:"cache_time"`
+	RefreshLeaseTime int               `json:"refresh_lease_time"`
+	QASDomain        string            `json:"qas_domain"`
+	QASSuffix        string            `json:"qas_url_suffix"`
+	QueryParams      map[string]string `json:"query_params"`
+	Queries          map[string]string `json:"queries"`
+	AuthHeader       string            `json:"auth_header"`
+	CORSOrigins      []string          `json:"cors_origins"`
+
+	SQLUser     string `json:"-"`
+	SQLPassword string `json:"-"`
+	QASUser     string `json:"-"`
+	QASPassword string `json:"-"`
+	AuthSecret  string `json:"-"`
 }
 
-func Load() (Config, error) {
-	cfg := Config{
-		Addr:             getEnv("MWSAPI_ADDR", ":8080"),
-		SQLServer:        os.Getenv("MWSAPI_SQL_SERVER"),
-		SQLDatabase:      getEnv("MWSAPI_SQL_DATABASE", "MWSAPI"),
-		SQLUser:          os.Getenv("MWSAPI_SQL_USER"),
-		SQLPassword:      os.Getenv("MWSAPI_SQL_PASSWORD"),
-		QASDomain:        os.Getenv("MWSAPI_QAS_DOMAIN"),
-		QASSuffix:        os.Getenv("MWSAPI_QAS_SUFFIX"),
-		QASUser:          os.Getenv("MWSAPI_QAS_USER"),
-		QASPassword:      os.Getenv("MWSAPI_QAS_PASSWORD"),
-		CacheTTLSeconds:  getEnvInt("MWSAPI_CACHE_TTL_SECONDS", 600),
-		RefreshLeaseSecs: getEnvInt("MWSAPI_REFRESH_LEASE_SECONDS", 120),
-		AuthHeader:       getEnv("MWSAPI_AUTH_HEADER", "X-NDnerBYETrTEHL6F"),
-		AuthSecret:       os.Getenv("MWSAPI_AUTH_SECRET"),
-		ServerNumber:     os.Getenv("MWSAPI_SERVER_NUMBER"),
-		SystemVersion:    getEnv("MWSAPI_SYSTEM_VERSION", "development"),
+func Load(path string) (Config, error) {
+	if path == "" {
+		path = os.Getenv("MWSAPI_CONFIG")
 	}
+
+	if path == "" {
+		path = "config/app.json"
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return Config{}, fmt.Errorf("read config file: %w", err)
+	}
+
+	var cfg Config
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		return Config{}, fmt.Errorf("parse config file: %w", err)
+	}
+
+	cfg.SQLUser = os.Getenv("MWSAPI_SQL_USER")
+	cfg.SQLPassword = os.Getenv("MWSAPI_SQL_PASSWORD")
+	cfg.QASUser = os.Getenv("MWSAPI_QAS_USER")
+	cfg.QASPassword = os.Getenv("MWSAPI_QAS_PASSWORD")
+	cfg.AuthSecret = os.Getenv("MWSAPI_AUTH_SECRET")
 
 	if err := cfg.Validate(); err != nil {
 		return Config{}, err
@@ -53,49 +62,35 @@ func Load() (Config, error) {
 
 func (cfg Config) Validate() error {
 	required := map[string]string{
-		"MWSAPI_SQL_SERVER":   cfg.SQLServer,
-		"MWSAPI_QAS_DOMAIN":   cfg.QASDomain,
-		"MWSAPI_QAS_SUFFIX":   cfg.QASSuffix,
-		"MWSAPI_QAS_USER":     cfg.QASUser,
-		"MWSAPI_QAS_PASSWORD": cfg.QASPassword,
-		"MWSAPI_AUTH_SECRET":  cfg.AuthSecret,
+		"sql_server":     cfg.SQLServer,
+		"sql_database":   cfg.SQLDatabase,
+		"qas_domain":     cfg.QASDomain,
+		"qas_url_suffix": cfg.QASSuffix,
+		"auth_header":    cfg.AuthHeader,
+		"sql_user":       cfg.SQLUser,
+		"sql_password":   cfg.SQLPassword,
+		"qas_user":       cfg.QASUser,
+		"qas_password":   cfg.QASPassword,
+		"auth_secret":    cfg.AuthSecret,
 	}
 
 	for name, value := range required {
 		if value == "" {
-			return fmt.Errorf("required environment variable %s is not set", name)
+			return fmt.Errorf("required configuration value %q is not set", name)
 		}
 	}
 
-	if cfg.CacheTTLSeconds <= 0 {
-		return errors.New("MWSAPI_CACHE_TTL_SECONDS must be greater than zero")
+	if cfg.CacheTime <= 0 {
+		return errors.New("cache_time must be greater than zero")
 	}
 
-	if cfg.RefreshLeaseSecs <= 0 {
-		return errors.New("MWSAPI_REFRESH_LEASE_SECONDS must be greater than zero")
+	if cfg.RefreshLeaseTime <= 0 {
+		return errors.New("refresh_lease_time must be greater than zero")
+	}
+
+	if len(cfg.Queries) == 0 {
+		return errors.New("queries must contain at least one query")
 	}
 
 	return nil
-}
-
-func getEnv(name string, fallback string) string {
-	value := os.Getenv(name)
-	if value == "" {
-		return fallback
-	}
-	return value
-}
-
-func getEnvInt(name string, fallback int) int {
-	value := os.Getenv(name)
-	if value == "" {
-		return fallback
-	}
-
-	result, err := strconv.Atoi(value)
-	if err != nil {
-		return fallback
-	}
-
-	return result
 }

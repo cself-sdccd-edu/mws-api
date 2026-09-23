@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	cfg, err := config.Load()
+	cfg, err := config.Load("")
 	if err != nil {
 		log.Printf("configuration error: %v", err)
 		os.Exit(1)
