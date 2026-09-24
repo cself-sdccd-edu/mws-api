@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
-	"fmt"
+	//"fmt"
 	"github.com/cself-sdccd-edu/mws-api/internal/cache"
 	"github.com/cself-sdccd-edu/mws-api/internal/config"
 	"github.com/cself-sdccd-edu/mws-api/internal/db"
 	"github.com/cself-sdccd-edu/mws-api/internal/qas"
+	"github.com/cself-sdccd-edu/mws-api/internal/api"
 	"log"
 	"net/http"
 	"os"
@@ -43,9 +44,12 @@ func main() {
 	cacheStore := cache.NewSQLServerStore(database)
 	cacheService := cache.NewService(cacheStore, qasClient, log.Default(), time.Duration(cfg.CacheTime)*time.Second, time.Duration(cfg.RefreshLeaseTime)*time.Second)
 
+	server := api.NewServer(cfg,cacheService)
 	log.Printf("mws-api starting on %s", cfg.Addr)
 	log.Printf("environment: %s", cfg.SystemVersion)
 	log.Printf("connected to SQL Server database %s", cfg.SQLDatabase)
+	log.Fatal(server.ListenAndServe())
+
 	/* this was temporary verification of database and cache features. it will be removed as the application grows
 	store := cache.NewSQLServerStore(database)
 
