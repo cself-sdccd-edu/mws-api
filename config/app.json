@@ -7,7 +7,7 @@
 	"sql_trust_server_certificate": true,
     "cache_time": 600,
     "refresh_lease_time": 180,
-    "qas_domain": "https://csprd.sdccd.edu",
+    "qas_domain": "https://csuat.sdccd.edu",
     "qas_url_suffix": "/PSIGW/RESTListeningConnector/PSFT_CS/ExecuteQuery.v1/PUBLIC/{QUERY_NAME}/JSON/NONFILE?",
     "query_params": {
         "isconnectedquery": "n",
