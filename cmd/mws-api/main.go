@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"encoding/json"
+	//"encoding/json"
 	"github.com/cself-sdccd-edu/mws-api/internal/api"
 	"github.com/cself-sdccd-edu/mws-api/internal/cache"
 	"github.com/cself-sdccd-edu/mws-api/internal/config"
@@ -28,12 +28,14 @@ func main() {
 		os.Exit(1)
 	}
 	log.Printf("loading configuration from %s", configPath)
+	/* maybe this should be a configurable option?
 	safeConfig := cfg
 	safeConfig.SQLPassword = ""
 	safeConfig.QASPassword = ""
 	safeConfig.AuthSecret = ""
 	configJSON, _ := json.MarshalIndent(safeConfig, "", "    ")
 	log.Printf("configuration:\n%s", configJSON)
+	*/
 
 	// create context for our sevices
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

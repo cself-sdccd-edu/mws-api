@@ -13,4 +13,4 @@ go vet ./...
 
 OUTPUT="dist/mws-api"
 
-CGO_ENABLED=0 go build -trimpath -ldflags="-s -w -X 'github.com/cself-sdccd-edu/internal/version.Version=${VERSION}' -X 'github.com/cself-sdccd-edu/internal/version.Commit=${COMMIT}' -X 'github.com/cself-sdccd-edu/internal/version.BuildDate=${BUILD_DATE}'" -o "${OUTPUT}" ./cmd/mws-api
+CGO_ENABLED=0 go build -trimpath -ldflags="-s -w -X 'github.com/cself-sdccd-edu/mws-api/internal/version.Version=${VERSION}' -X 'github.com/cself-sdccd-edu/mws-api/internal/version.Commit=${COMMIT}' -X 'github.com/cself-sdccd-edu/mws-api/internal/version.BuildDate=${BUILD_DATE}'" -o "${OUTPUT}" ./cmd/mws-api
