@@ -27,7 +27,13 @@ func (s *Server) routes() http.Handler {
 
 	mux.HandleFunc("/api/health", healthHandler)
 
-	mux.HandleFunc("/schedule", scheduleHandler)
+	mux.Handle(
+		"GET /schedule",
+		authMiddleware(
+			s.config,
+			http.HandlerFunc(s.scheduleHandler),
+		),
+	)
 
 	return mux
 }

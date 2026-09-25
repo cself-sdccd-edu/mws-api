@@ -5,17 +5,33 @@
     "sql_server": "DCDB03\\WEBAPPS_STAGING",
     "sql_database": "MWSAPI",
 	"sql_trust_server_certificate": true,
-    "cache_time": 600,
+    "cache_time": 60,
+	"max_cache_time": 43200,
     "refresh_lease_time": 180,
     "qas_domain": "https://csuat.sdccd.edu",
     "qas_url_suffix": "/PSIGW/RESTListeningConnector/PSFT_CS/ExecuteQuery.v1/PUBLIC/{QUERY_NAME}/JSON/NONFILE?",
-    "query_params": {
-        "isconnectedquery": "n",
-        "maxrows": "9999",
-        "prompt_uniquepromptname": "BIND1",
-        "prompt_fieldvalue": "{TERM}",
-        "json_resp": "true"
-    },
+    "query_params": [
+        {
+            "name": "isconnectedquery",
+            "value": "n"
+        },
+        {
+            "name": "maxrows",
+            "value": "9999"
+        },
+        {
+            "name": "prompt_uniquepromptname",
+            "value": "BIND1"
+        },
+        {
+            "name": "prompt_fieldvalue",
+            "value": "{TERM}"
+        },
+        {
+            "name": "json_resp",
+            "value": "true"
+        }
+    ],
     "queries": {
         "ugrd": "X_SR_CLSSCHED_DATA",
         "ce": "X_SR_CLSSCHED_DATA_CE"

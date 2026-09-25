@@ -15,10 +15,11 @@ type Config struct {
 	SQLDatabase            string            `json:"sql_database"`
 	TrustServerCertificate bool              `json:"sql_trust_server_certificate"`
 	CacheTime              int               `json:"cache_time"`
+	MaxCacheTime           int               `json:"max_cache_time"`
 	RefreshLeaseTime       int               `json:"refresh_lease_time"`
 	QASDomain              string            `json:"qas_domain"`
 	QASSuffix              string            `json:"qas_url_suffix"`
-	QueryParams            map[string]string `json:"query_params"`
+	QueryParams            []QueryParam      `json:"query_params"`
 	Queries                map[string]string `json:"queries"`
 	AuthHeader             string            `json:"auth_header"`
 	CORSOrigins            []string          `json:"cors_origins"`
@@ -28,6 +29,11 @@ type Config struct {
 	QASUser     string `json:"-"`
 	QASPassword string `json:"-"`
 	AuthSecret  string `json:"-"`
+}
+
+type QueryParam struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }
 
 func Load(path string) (Config, error) {

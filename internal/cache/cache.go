@@ -7,6 +7,7 @@ import (
 
 type Entry struct {
 	Data             []byte
+	HasData          bool
 	UpdatedAt        time.Time
 	RefreshStartedAt *time.Time
 	LastRefreshError *string

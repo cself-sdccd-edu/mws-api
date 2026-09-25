@@ -18,16 +18,25 @@ func NewSQLServerStore(db *sql.DB) *SQLServerStore {
 func (s *SQLServerStore) Get(ctx context.Context, key string) (*Entry, error) {
 	row := s.db.QueryRowContext(ctx, "EXEC dbo.Cache_Get @CacheKey = @p1", sql.Named("p1", key))
 
-	var entry Entry
+	var cacheKey string
+	var data []byte
+	var updatedAt time.Time
 	var refreshStartedAt sql.NullTime
 	var lastRefreshError sql.NullString
+	var hasData bool
 
-	err := row.Scan(&key, &entry.Data, &entry.UpdatedAt, &refreshStartedAt, &lastRefreshError)
+	err := row.Scan(&cacheKey, &data, &updatedAt, &refreshStartedAt, &lastRefreshError, &hasData)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("get cache entry %q: %w", key, err)
+	}
+
+	entry := Entry{
+		Data:      data,
+		HasData:   hasData,
+		UpdatedAt: updatedAt,
 	}
 
 	if refreshStartedAt.Valid {
@@ -40,6 +49,7 @@ func (s *SQLServerStore) Get(ctx context.Context, key string) (*Entry, error) {
 
 	return &entry, nil
 }
+
 func (s *SQLServerStore) TryStartRefresh(ctx context.Context, key string, lease time.Duration) (bool, error) {
 	row := s.db.QueryRowContext(ctx, "EXEC dbo.Cache_TryStartRefresh @CacheKey = @p1, @LeaseSeconds = @p2", sql.Named("p1", key), sql.Named("p2", int(lease.Seconds())))
 

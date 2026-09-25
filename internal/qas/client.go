@@ -3,7 +3,9 @@ package qas
 import (
 	"context"
 	"fmt"
+	"github.com/cself-sdccd-edu/mws-api/internal/config"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -17,12 +19,12 @@ type HTTPClient struct {
 	client      *http.Client
 	domain      string
 	urlSuffix   string
-	queryParams map[string]string
+	queryParams []config.QueryParam
 	user        string
 	password    string
 }
 
-func NewHTTPClient(client *http.Client, domain string, urlSuffix string, queryParams map[string]string, user string, password string) *HTTPClient {
+func NewHTTPClient(client *http.Client, domain string, urlSuffix string, queryParams []config.QueryParam, user string, password string) *HTTPClient {
 	return &HTTPClient{
 		client:      client,
 		domain:      domain,
@@ -36,17 +38,24 @@ func NewHTTPClient(client *http.Client, domain string, urlSuffix string, queryPa
 func (c *HTTPClient) Query(ctx context.Context, queryName string, term string) ([]byte, error) {
 	suffix := strings.ReplaceAll(c.urlSuffix, "{QUERY_NAME}", url.PathEscape(queryName))
 
-	params := url.Values{}
-	for key, value := range c.queryParams {
-		params.Set(key, strings.ReplaceAll(value, "{TERM}", term))
+	var query []string
+	for _, param := range c.queryParams {
+		value := strings.ReplaceAll(param.Value, "{TERM}", term)
+		query = append(query, url.QueryEscape(param.Name)+"="+url.QueryEscape(value))
+		//log.Default().Printf("query param: %s = %s", param.Name, value)
+	}
+	if len(query) == 0 {
+		return nil, fmt.Errorf("no query params parsed")
 	}
 
-	requestURL := strings.TrimRight(c.domain, "/") + suffix + params.Encode()
+	requestURL := strings.TrimRight(c.domain, "/") + suffix + strings.Join(query, "&")
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, requestURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create QAS request: %w", err)
 	}
+	// DEBUG: remote this output later
+	log.Default().Printf("Request URL: %s", requestURL)
 
 	request.SetBasicAuth(c.user, c.password)
 
