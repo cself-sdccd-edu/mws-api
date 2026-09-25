@@ -8,6 +8,7 @@ import (
 	"github.com/cself-sdccd-edu/mws-api/internal/config"
 	"github.com/cself-sdccd-edu/mws-api/internal/db"
 	"github.com/cself-sdccd-edu/mws-api/internal/qas"
+	"github.com/cself-sdccd-edu/mws-api/internal/version"
 	"log"
 	"net/http"
 	"os"
@@ -55,6 +56,7 @@ func main() {
 	server := api.NewServer(cfg, cacheService)
 	log.Printf("mws-api starting on %s", cfg.Addr)
 	log.Printf("environment: %s", cfg.SystemVersion)
+	log.Printf("version: %s %s %s", version.Version, version.Commit, version.BuildDate)
 	log.Printf("connected to SQL Server database %s", cfg.SQLDatabase)
 	log.Fatal(server.ListenAndServe())
 
