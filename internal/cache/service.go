@@ -97,7 +97,7 @@ func (s *Service) refreshNow(ctx context.Context, key string, refresh RefreshReq
 
 		return nil, fmt.Errorf("save refreshed cache: %w", err)
 	}
-
+	s.logger.Printf("returned from QAS fetch for %s", key)
 	entry, err := s.store.Get(ctx, key)
 	if err != nil {
 		return nil, fmt.Errorf("get refreshed cache: %w", err)

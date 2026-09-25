@@ -55,8 +55,12 @@ func (s *Server) scheduleHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintln(w, "/schedule endpoint. params: term=", term, "career=", career)
-	fmt.Fprintln(w, "entry updated at", entry.UpdatedAt)
-	// parse out and validate term and career, then do cache stuff
-	// we can use s.cache since the handler is attached to the server :)
+	// I don't want to write this to the client/browser. I want to write the JSON form entry.Data
+	//fmt.Fprintln(w, "/schedule endpoint. params: term=", term, "career=", career)
+	//fmt.Fprintln(w, "entry updated at", entry.UpdatedAt)
+
+	w.Header().Set("Content-Type", "application/json")
+	if _, err := w.Write(entry.Data); err != nil {
+		return
+	}
 }
