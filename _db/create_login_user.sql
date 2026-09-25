@@ -1,0 +1,23 @@
+USE [master]
+GO
+
+CREATE LOGIN [api_user] WITH PASSWORD=N'...', DEFAULT_DATABASE=[MWSAPI], DEFAULT_LANGUAGE=[us_english], CHECK_EXPIRATION=OFF, CHECK_POLICY=OFF
+GO
+
+USE [MWSAPI]
+GO
+
+CREATE USER [api_user] FOR LOGIN [api_user] WITH DEFAULT_SCHEMA=[dbo]
+GO
+
+GRANT EXECUTE ON OBJECT::dbo.Cache_Get TO [api_user]
+GO
+
+GRANT EXECUTE ON OBJECT::dbo.Cache_TryStartRefresh TO [api_user]
+GO
+
+GRANT EXECUTE ON OBJECT::dbo.Cache_Save TO [api_user]
+GO
+
+GRANT EXECUTE ON OBJECT::dbo.Cache_FailRefresh TO [api_user]
+GO
