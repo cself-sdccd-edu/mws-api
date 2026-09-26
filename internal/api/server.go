@@ -35,5 +35,21 @@ func (s *Server) routes() http.Handler {
 		),
 	)
 
+	// backwards compatible routes (may be removed later)
+	mux.Handle(
+		"GET /{$}",
+		authMiddleware(
+			s.config,
+			http.HandlerFunc(s.scheduleHandler),
+		),
+	)
+	mux.Handle(
+		"GET /index.cfm",
+		authMiddleware(
+			s.config,
+			http.HandlerFunc(s.scheduleHandler),
+		),
+	)
+
 	return mux
 }
