@@ -19,6 +19,11 @@ func (s *Server) scheduleHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !validTerm(term) {
+		http.Error(w, "invalid term parameter", http.StatusBadRequest)
+		return
+	}
+
 	if career == "" {
 		http.Error(w, "missing career parameter", http.StatusBadRequest)
 		return
