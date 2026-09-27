@@ -67,7 +67,16 @@ func (s *Service) Get(ctx context.Context, key string, refresh RefreshRequest) (
 
 			claimed, err := s.store.TryStartRefresh(ctx, key, s.refreshLease)
 			if err != nil {
-				return nil, fmt.Errorf("claim cache refresh: %w", err)
+				s.logEvent(ctx, mwslog.LogEvent{
+					RequestID: requestID,
+					Event:     "cache_refresh_claim_error",
+					CacheKey:  key,
+					QueryName: refresh.QueryName,
+					Term:      refresh.Term,
+					Message:   err.Error(),
+				})
+
+				return entry, nil
 			}
 
 			if claimed {
@@ -80,7 +89,6 @@ func (s *Service) Get(ctx context.Context, key string, refresh RefreshRequest) (
 					Message:   "background cache refresh started",
 				})
 
-				requestID := mwslog.RequestID(ctx)
 				refreshCtx := mwslog.WithRequestID(context.Background(), requestID)
 				go s.refresh(refreshCtx, key, refresh)
 			}
