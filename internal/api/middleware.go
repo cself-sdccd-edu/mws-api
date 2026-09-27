@@ -37,7 +37,7 @@ func requestMiddleware(logger mwslog.Logger, next http.Handler) http.Handler {
 
 		event := mwslog.LogEvent{
 			RequestID:  requestID,
-			Event: "request_start",
+			Event:      "request_start",
 			ClientIP:   mwslog.ClientIP(r),
 			UserAgent:  r.UserAgent(),
 			Method:     r.Method,

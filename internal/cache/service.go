@@ -226,4 +226,3 @@ func (s *Service) logEvent(ctx context.Context, event mwslog.LogEvent) {
 		s.logger.Printf("event logging failed: %v", err)
 	}
 }
-
