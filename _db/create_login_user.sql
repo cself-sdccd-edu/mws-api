@@ -21,3 +21,6 @@ GO
 
 GRANT EXECUTE ON OBJECT::dbo.Cache_FailRefresh TO [api_user]
 GO
+
+GRANT EXECUTE ON OBJECT::dbo.Log_Insert TO [api_user];
+GO

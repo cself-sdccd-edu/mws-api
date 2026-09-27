@@ -3,18 +3,21 @@ package api
 import (
 	"github.com/cself-sdccd-edu/mws-api/internal/cache"
 	"github.com/cself-sdccd-edu/mws-api/internal/config"
+	mwslog "github.com/cself-sdccd-edu/mws-api/internal/log"
 	"net/http"
 )
 
 type Server struct {
 	config config.Config
 	cache  *cache.Service
+	logger mwslog.Logger
 }
 
-func NewServer(cfg config.Config, cache *cache.Service) *http.Server {
+func NewServer(cfg config.Config, cache *cache.Service, logger mwslog.Logger) *http.Server {
 	server := Server{
 		config: cfg,
 		cache:  cache,
+		logger: logger,
 	}
 	return &http.Server{
 		Addr:    cfg.Addr,
@@ -29,25 +32,31 @@ func (s *Server) routes() http.Handler {
 
 	mux.Handle(
 		"GET /schedule",
-		authMiddleware(
-			s.config,
-			http.HandlerFunc(s.scheduleHandler),
+		requestMiddleware(s.logger,
+			authMiddleware(
+				s.config,
+				http.HandlerFunc(s.scheduleHandler),
+			),
 		),
 	)
 
 	// backwards compatible routes (may be removed later)
 	mux.Handle(
 		"GET /{$}",
-		authMiddleware(
-			s.config,
-			http.HandlerFunc(s.scheduleHandler),
+		requestMiddleware(s.logger,
+			authMiddleware(
+				s.config,
+				http.HandlerFunc(s.scheduleHandler),
+			),
 		),
 	)
 	mux.Handle(
 		"GET /index.cfm",
-		authMiddleware(
-			s.config,
-			http.HandlerFunc(s.scheduleHandler),
+		requestMiddleware(s.logger,
+			authMiddleware(
+				s.config,
+				http.HandlerFunc(s.scheduleHandler),
+			),
 		),
 	)
 

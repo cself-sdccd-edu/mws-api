@@ -7,6 +7,7 @@ import (
 	"github.com/cself-sdccd-edu/mws-api/internal/cache"
 	"github.com/cself-sdccd-edu/mws-api/internal/config"
 	"github.com/cself-sdccd-edu/mws-api/internal/db"
+	mwslog "github.com/cself-sdccd-edu/mws-api/internal/log"
 	"github.com/cself-sdccd-edu/mws-api/internal/qas"
 	"github.com/cself-sdccd-edu/mws-api/internal/version"
 	"log"
@@ -50,12 +51,13 @@ func main() {
 	defer database.Close()
 
 	// init services
+	appLogger := mwslog.NewSQLLogger(database, cfg.ServerNumber, version.Version)
 	httpClient := &http.Client{Timeout: 30 * time.Second}
 	qasClient := qas.NewHTTPClient(httpClient, cfg.QASDomain, cfg.QASSuffix, cfg.QueryParams, cfg.QASUser, cfg.QASPassword)
 	cacheStore := cache.NewSQLServerStore(database)
-	cacheService := cache.NewService(cacheStore, qasClient, log.Default(), time.Duration(cfg.CacheTime)*time.Second, time.Duration(cfg.MaxCacheTime)*time.Second, time.Duration(cfg.RefreshLeaseTime)*time.Second)
+	cacheService := cache.NewService(cacheStore, qasClient, log.Default(), appLogger, time.Duration(cfg.CacheTime)*time.Second, time.Duration(cfg.MaxCacheTime)*time.Second, time.Duration(cfg.RefreshLeaseTime)*time.Second)
 
-	server := api.NewServer(cfg, cacheService)
+	server := api.NewServer(cfg, cacheService, appLogger)
 	log.Printf("mws-api starting on %s", cfg.Addr)
 	log.Printf("environment: %s", cfg.SystemVersion)
 	log.Printf("version: %s %s %s", version.Version, version.Commit, version.BuildDate)

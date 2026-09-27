@@ -10,7 +10,7 @@ import (
 type Config struct {
 	Addr                   string            `json:"addr"`
 	SystemVersion          string            `json:"system_version"`
-	ServerNumber           string            `json:"server_number"`
+	ServerNumber           int               `json:"server_number"`
 	SQLServer              string            `json:"sql_server"`
 	SQLDatabase            string            `json:"sql_database"`
 	TrustServerCertificate bool              `json:"sql_trust_server_certificate"`

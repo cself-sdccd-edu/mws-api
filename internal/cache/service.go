@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"fmt"
+	mwslog "github.com/cself-sdccd-edu/mws-api/internal/log"
 	"github.com/cself-sdccd-edu/mws-api/internal/qas"
 	"log"
 	"time"
@@ -12,6 +13,7 @@ type Service struct {
 	store        Store
 	qasClient    qas.Client
 	logger       *log.Logger
+	eventLogger  mwslog.Logger
 	cacheTime    time.Duration
 	maxCacheTime time.Duration
 	refreshLease time.Duration
@@ -22,14 +24,15 @@ type RefreshRequest struct {
 	Term      string
 }
 
-func NewService(store Store, qasClient qas.Client, logger *log.Logger, cacheTime time.Duration, maxCacheTime time.Duration, refreshLease time.Duration) *Service {
+func NewService(store Store, qasClient qas.Client, logger *log.Logger, eventLogger mwslog.Logger, cacheTime time.Duration, maxCacheTime time.Duration, refreshLease time.Duration) *Service {
 	return &Service{
 		store:        store,
-		cacheTime:    cacheTime,
 		maxCacheTime: maxCacheTime,
+		cacheTime:    cacheTime,
 		refreshLease: refreshLease,
 		qasClient:    qasClient,
 		logger:       logger,
+		eventLogger:  eventLogger,
 	}
 }
 
@@ -38,51 +41,94 @@ func (s *Service) Get(ctx context.Context, key string, refresh RefreshRequest) (
 	if err != nil {
 		return nil, err
 	}
+	requestID := mwslog.RequestID(ctx)
 
 	if entry != nil && entry.HasData {
 		age := time.Since(entry.UpdatedAt)
-		s.logger.Printf("cache %q age=%v cache_time=%v max_cache_time=%v updated_at=%v", key, age, s.cacheTime, s.maxCacheTime, entry.UpdatedAt)
-
-		// best case, we have valid cached data - let's just return it
+		s.logger.Printf("requestid %v cache %q age=%v cache_time=%v max_cache_time=%v updated_at=%v", requestID, key, age, s.cacheTime, s.maxCacheTime, entry.UpdatedAt)
 		if age < s.cacheTime {
+			s.logEvent(ctx, mwslog.LogEvent{
+				RequestID: requestID,
+				Event:     "cache_hit",
+				CacheKey:  key,
+				Message:   "cache entry is fresh",
+			})
+
 			return entry, nil
 		}
 
-		// we have stale data that is still within the maximum cache lifetime.
-		// fire up a refresh background job to update cache but return the stale data.
 		if age < s.maxCacheTime {
+			s.logEvent(ctx, mwslog.LogEvent{
+				RequestID: requestID,
+				Event:     "cache_hit",
+				CacheKey:  key,
+				Message:   "cache entry is stale but within maximum cache lifetime",
+			})
+
 			claimed, err := s.store.TryStartRefresh(ctx, key, s.refreshLease)
 			if err != nil {
 				return nil, fmt.Errorf("claim cache refresh: %w", err)
 			}
 
 			if claimed {
-				go s.refresh(key, refresh)
+				s.logEvent(ctx, mwslog.LogEvent{
+					RequestID: requestID,
+					Event:     "cache_refresh_start",
+					CacheKey:  key,
+					QueryName: refresh.QueryName,
+					Term:      refresh.Term,
+					Message:   "background cache refresh started",
+				})
+
+				requestID := mwslog.RequestID(ctx)
+				refreshCtx := mwslog.WithRequestID(context.Background(), requestID)
+				go s.refresh(refreshCtx, key, refresh)
 			}
 
 			return entry, nil
 		}
 	}
 
-	// there is no usable data, try to claim a refresh lease
+	s.logEvent(ctx, mwslog.LogEvent{
+		RequestID: requestID,
+		Event:     "cache_miss",
+		CacheKey:  key,
+		QueryName: refresh.QueryName,
+		Term:      refresh.Term,
+		Message:   "cache entry is missing or expired",
+	})
+
 	claimed, err := s.store.TryStartRefresh(ctx, key, s.refreshLease)
 	if err != nil {
 		return nil, fmt.Errorf("claim cache refresh: %w", err)
 	}
 
-	// someone else is refreshing so let's wait. waiting will also attempt to claim
-	// a lease after some time in order to recover if the other refresh task fails.
 	if !claimed {
 		return s.waitForRefresh(ctx, key, refresh)
 	}
 
-	// there is no usable data to serve, so refresh it here, in this context, and wait.
 	return s.refreshNow(ctx, key, refresh)
+
 }
 
 func (s *Service) refreshNow(ctx context.Context, key string, refresh RefreshRequest) (*Entry, error) {
+	start := time.Now()
+	requestID := mwslog.RequestID(ctx)
+
 	data, err := s.qasClient.Query(ctx, refresh.QueryName, refresh.Term)
+	duration := time.Since(start)
+
 	if err != nil {
+		s.logEvent(ctx, mwslog.LogEvent{
+			RequestID:  requestID,
+			Event:      "qas_error",
+			CacheKey:   key,
+			QueryName:  refresh.QueryName,
+			Term:       refresh.Term,
+			DurationMs: int(duration.Milliseconds()),
+			Message:    err.Error(),
+		})
+
 		if failErr := s.store.FailRefresh(ctx, key, err); failErr != nil {
 			return nil, fmt.Errorf("QAS refresh failed: %w; recording failure: %v", err, failErr)
 		}
@@ -90,29 +136,51 @@ func (s *Service) refreshNow(ctx context.Context, key string, refresh RefreshReq
 		return nil, fmt.Errorf("QAS refresh failed: %w", err)
 	}
 
+	s.logEvent(ctx, mwslog.LogEvent{
+		RequestID:  requestID,
+		Event:      "qas_refresh",
+		CacheKey:   key,
+		QueryName:  refresh.QueryName,
+		Term:       refresh.Term,
+		DurationMs: int(duration.Milliseconds()),
+		DataSize:   len(data),
+		Message:    "QAS refresh completed",
+	})
+
 	if err := s.store.Save(ctx, key, data); err != nil {
+		s.logEvent(ctx, mwslog.LogEvent{
+			RequestID: requestID,
+			Event:     "cache_save_error",
+			CacheKey:  key,
+			QueryName: refresh.QueryName,
+			Term:      refresh.Term,
+			Message:   err.Error(),
+		})
+
 		if failErr := s.store.FailRefresh(ctx, key, err); failErr != nil {
 			return nil, fmt.Errorf("save refreshed cache: %w; recording failure: %v", err, failErr)
 		}
 
 		return nil, fmt.Errorf("save refreshed cache: %w", err)
 	}
-	s.logger.Printf("returned from QAS fetch for %s", key)
+
 	entry, err := s.store.Get(ctx, key)
 	if err != nil {
 		return nil, fmt.Errorf("get refreshed cache: %w", err)
 	}
 
 	return entry, nil
+
 }
 
-func (s *Service) refresh(key string, refresh RefreshRequest) {
-	ctx, cancel := context.WithTimeout(context.Background(), s.refreshLease)
+func (s *Service) refresh(ctx context.Context, key string, refresh RefreshRequest) {
+	ctx, cancel := context.WithTimeout(ctx, s.refreshLease)
 	defer cancel()
 
 	if _, err := s.refreshNow(ctx, key, refresh); err != nil {
 		s.logger.Printf("background cache refresh %q failed: %v", key, err)
 	}
+
 }
 
 func (s *Service) waitForRefresh(ctx context.Context, key string, refresh RefreshRequest) (*Entry, error) {
@@ -132,6 +200,12 @@ func (s *Service) waitForRefresh(ctx context.Context, key string, refresh Refres
 		}
 
 		if entry != nil && entry.HasData && time.Since(entry.UpdatedAt) < s.maxCacheTime {
+			s.logEvent(ctx, mwslog.LogEvent{
+				Event:    "cache_refresh_complete",
+				CacheKey: key,
+				Message:  "waited for another request to refresh cache",
+			})
+
 			return entry, nil
 		}
 
@@ -144,4 +218,12 @@ func (s *Service) waitForRefresh(ctx context.Context, key string, refresh Refres
 			return s.refreshNow(ctx, key, refresh)
 		}
 	}
+
 }
+
+func (s *Service) logEvent(ctx context.Context, event mwslog.LogEvent) {
+	if err := s.eventLogger.Log(ctx, event); err != nil {
+		s.logger.Printf("event logging failed: %v", err)
+	}
+}
+
