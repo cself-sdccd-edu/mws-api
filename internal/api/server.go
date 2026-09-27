@@ -5,6 +5,7 @@ import (
 	"github.com/cself-sdccd-edu/mws-api/internal/config"
 	mwslog "github.com/cself-sdccd-edu/mws-api/internal/log"
 	"net/http"
+	"time"
 )
 
 type Server struct {
@@ -20,8 +21,12 @@ func NewServer(cfg config.Config, cache *cache.Service, logger mwslog.Logger) *h
 		logger: logger,
 	}
 	return &http.Server{
-		Addr:    cfg.Addr,
-		Handler: server.routes(),
+		Addr:              cfg.Addr,
+		Handler:           server.routes(),
+		ReadTimeout:       15 * time.Second,
+		ReadHeaderTimeout: 5 * time.Second,
+		WriteTimeout:      60 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	}
 }
 

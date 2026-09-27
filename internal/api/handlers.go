@@ -3,6 +3,8 @@ package api
 import (
 	"fmt"
 	"github.com/cself-sdccd-edu/mws-api/internal/cache"
+	mwslog "github.com/cself-sdccd-edu/mws-api/internal/log"
+	"log"
 	"net/http"
 )
 
@@ -56,7 +58,8 @@ func (s *Server) scheduleHandler(w http.ResponseWriter, r *http.Request) {
 	// try to get a cached request for this key
 	entry, err := s.cache.Get(r.Context(), key, refresh)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("cache error: %v", err), http.StatusInternalServerError)
+		//http.Error(w, fmt.Sprintf("cache error: %v", err), http.StatusInternalServerError)
+		s.writeInternalError(w, r, "unable to retrieve schedule data", err)
 		return
 	}
 
@@ -68,4 +71,24 @@ func (s *Server) scheduleHandler(w http.ResponseWriter, r *http.Request) {
 	if _, err := w.Write(entry.Data); err != nil {
 		return
 	}
+}
+
+func (s *Server) writeInternalError(w http.ResponseWriter, r *http.Request, publicMessage string, internalErr error) {
+	requestID := mwslog.RequestID(r.Context())
+
+	event := mwslog.LogEvent{
+		RequestID:  requestID,
+		Event:      "request_error",
+		Method:     r.Method,
+		Endpoint:   r.URL.Path,
+		StatusCode: http.StatusInternalServerError,
+		Message:    publicMessage,
+		Details:    internalErr.Error(),
+	}
+
+	if err := s.logger.Log(r.Context(), event); err != nil {
+		log.Printf("requestid %s error logging failed: %v", requestID, err)
+	}
+
+	http.Error(w, publicMessage, http.StatusInternalServerError)
 }

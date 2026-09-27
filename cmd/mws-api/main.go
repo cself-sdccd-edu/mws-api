@@ -14,6 +14,8 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -30,14 +32,6 @@ func main() {
 		os.Exit(1)
 	}
 	log.Printf("loading configuration from %s", configPath)
-	/* maybe this should be a configurable option?
-	safeConfig := cfg
-	safeConfig.SQLPassword = ""
-	safeConfig.QASPassword = ""
-	safeConfig.AuthSecret = ""
-	configJSON, _ := json.MarshalIndent(safeConfig, "", "    ")
-	log.Printf("configuration:\n%s", configJSON)
-	*/
 
 	// create context for our sevices
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -58,18 +52,54 @@ func main() {
 	cacheStore := cache.NewSQLServerStore(database)
 	cacheService := cache.NewService(cacheStore, qasClient, log.Default(), appLogger, time.Duration(cfg.CacheTime)*time.Second, time.Duration(cfg.MaxCacheTime)*time.Second, time.Duration(cfg.RefreshLeaseTime)*time.Second)
 
-	server := api.NewServer(cfg, cacheService, appLogger)
+	httpServer := api.NewServer(cfg, cacheService, appLogger)
 	log.Printf("mws-api starting on %s", cfg.Addr)
 	log.Printf("environment: %s", cfg.SystemVersion)
 	log.Printf("version: %s %s %s", version.Version, version.Commit, version.BuildDate)
 	log.Printf("connected to SQL Server database %s", cfg.SQLDatabase)
+
+	// configure the listen requirements, start the server, and listen for shutdown signals
 	ln, err := net.Listen("tcp4", cfg.Addr)
 	if err != nil {
 		log.Fatal(err)
 	}
+	serverErrors := make(chan error, 1)
 
-	log.Fatal(server.Serve(ln))
+	go func() {
+		serverErrors <- httpServer.Serve(ln)
+	}()
 
-	//log.Fatal(server.ListenAndServe())
+	shutdownSignal := make(chan os.Signal, 1)
 
+	signal.Notify(
+		shutdownSignal,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+	)
+
+	select {
+	case err := <-serverErrors:
+		if err != nil && err != http.ErrServerClosed {
+			log.Fatalf("HTTP server failed: %v", err)
+		}
+
+	case sig := <-shutdownSignal:
+		log.Printf("shutdown signal received: %v", sig)
+	}
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(
+		context.Background(),
+		30*time.Second,
+	)
+	defer shutdownCancel()
+
+	if err := httpServer.Shutdown(shutdownCtx); err != nil {
+		log.Printf("graceful shutdown failed: %v", err)
+
+		if err := httpServer.Close(); err != nil {
+			log.Printf("forced shutdown failed: %v", err)
+		}
+	}
+
+	log.Println("shutdown complete")
 }
