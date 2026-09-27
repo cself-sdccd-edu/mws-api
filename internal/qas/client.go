@@ -1,7 +1,9 @@
 package qas
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/cself-sdccd-edu/mws-api/internal/config"
 	"io"
@@ -73,6 +75,14 @@ func (c *HTTPClient) Query(ctx context.Context, queryName string, term string) (
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, fmt.Errorf("read QAS response: %w", err)
+	}
+	data = bytes.TrimSpace(data)
+	if len(data) == 0 {
+		return nil, fmt.Errorf("QAS returned an empty response")
+	}
+
+	if !json.Valid(data) {
+		return nil, fmt.Errorf("QAS returned invalid JSON")
 	}
 
 	return data, nil
