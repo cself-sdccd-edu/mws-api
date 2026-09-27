@@ -11,6 +11,7 @@ import (
 	"github.com/cself-sdccd-edu/mws-api/internal/qas"
 	"github.com/cself-sdccd-edu/mws-api/internal/version"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -62,6 +63,13 @@ func main() {
 	log.Printf("environment: %s", cfg.SystemVersion)
 	log.Printf("version: %s %s %s", version.Version, version.Commit, version.BuildDate)
 	log.Printf("connected to SQL Server database %s", cfg.SQLDatabase)
-	log.Fatal(server.ListenAndServe())
+	ln, err := net.Listen("tcp4", cfg.Addr)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Fatal(server.Serve(ln))
+
+	//log.Fatal(server.ListenAndServe())
 
 }

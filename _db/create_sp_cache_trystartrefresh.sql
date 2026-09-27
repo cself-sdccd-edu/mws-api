@@ -29,7 +29,7 @@ BEGIN
     ELSE
     BEGIN
         INSERT INTO dbo.Cache (CacheKey, Data, UpdatedAt, RefreshStartedAt, LastRefreshError)
-        VALUES (@CacheKey, 0x, @Now, @Now, NULL);
+        VALUES (@CacheKey, NULL, @Now, @Now, NULL);
 
         SET @Claimed = 1;
     END
