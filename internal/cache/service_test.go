@@ -85,6 +85,7 @@ func TestGetReturnsAcceptableStaleEntryWhenRefreshClaimFails(t *testing.T) {
 		10*time.Minute,
 		12*time.Hour,
 		3*time.Minute,
+		2*time.Minute,
 	)
 
 	entry, err := service.Get(
@@ -146,6 +147,7 @@ func TestGetReturnsErrorWhenExpiredEntryCannotClaimRefresh(t *testing.T) {
 		10*time.Minute,
 		12*time.Hour,
 		3*time.Minute,
+		2*time.Minute,
 	)
 
 	entry, err := service.Get(

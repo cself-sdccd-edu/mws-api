@@ -8,6 +8,7 @@
     "cache_time": 600,
 	"max_cache_time": 43200,
     "refresh_lease_time": 180,
+	"refresh_timeout": 120,
     "qas_domain": "https://csuat.sdccd.edu",
     "qas_url_suffix": "/PSIGW/RESTListeningConnector/PSFT_CS/ExecuteQuery.v1/PUBLIC/{QUERY_NAME}/JSON/NONFILE?",
     "query_params": [

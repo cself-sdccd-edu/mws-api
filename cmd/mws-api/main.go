@@ -47,10 +47,13 @@ func main() {
 
 	// init services
 	appLogger := mwslog.NewSQLLogger(database, cfg.ServerNumber, version.Version)
-	httpClient := &http.Client{Timeout: 30 * time.Second}
+	// qas client, timeout value matches the refresh timeout
+	httpClient := &http.Client{
+		Timeout: time.Duration(cfg.RefreshTimeout) * time.Second,
+	}
 	qasClient := qas.NewHTTPClient(httpClient, cfg.QASDomain, cfg.QASSuffix, cfg.QueryParams, cfg.QASUser, cfg.QASPassword)
 	cacheStore := cache.NewSQLServerStore(database)
-	cacheService := cache.NewService(cacheStore, qasClient, log.Default(), appLogger, time.Duration(cfg.CacheTime)*time.Second, time.Duration(cfg.MaxCacheTime)*time.Second, time.Duration(cfg.RefreshLeaseTime)*time.Second)
+	cacheService := cache.NewService(cacheStore, qasClient, log.Default(), appLogger, time.Duration(cfg.CacheTime)*time.Second, time.Duration(cfg.MaxCacheTime)*time.Second, time.Duration(cfg.RefreshLeaseTime)*time.Second, time.Duration(cfg.RefreshLeaseTime)*time.Second)
 
 	httpServer := api.NewServer(cfg, cacheService, appLogger)
 	log.Printf("mws-api starting on %s", cfg.Addr)

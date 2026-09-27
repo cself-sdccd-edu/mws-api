@@ -17,6 +17,7 @@ type Config struct {
 	CacheTime              int               `json:"cache_time"`
 	MaxCacheTime           int               `json:"max_cache_time"`
 	RefreshLeaseTime       int               `json:"refresh_lease_time"`
+	RefreshTimeout         int               `json:"refresh_timeout"`
 	QASDomain              string            `json:"qas_domain"`
 	QASSuffix              string            `json:"qas_url_suffix"`
 	QueryParams            []QueryParam      `json:"query_params"`
@@ -93,6 +94,14 @@ func (cfg Config) Validate() error {
 
 	if cfg.RefreshLeaseTime <= 0 {
 		return errors.New("refresh_lease_time must be greater than zero")
+	}
+
+	if cfg.RefreshTimeout <= 0 {
+		return errors.New("refresh_timeout must be greater than zero")
+	}
+
+	if cfg.RefreshTimeout >= cfg.RefreshLeaseTime {
+		return errors.New("refresh_timeout must be less than refresh_lease_time")
 	}
 
 	if len(cfg.Queries) == 0 {

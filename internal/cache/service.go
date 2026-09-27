@@ -10,13 +10,14 @@ import (
 )
 
 type Service struct {
-	store        Store
-	qasClient    qas.Client
-	logger       *log.Logger
-	eventLogger  mwslog.Logger
-	cacheTime    time.Duration
-	maxCacheTime time.Duration
-	refreshLease time.Duration
+	store          Store
+	qasClient      qas.Client
+	logger         *log.Logger
+	eventLogger    mwslog.Logger
+	cacheTime      time.Duration
+	maxCacheTime   time.Duration
+	refreshLease   time.Duration
+	refreshTimeout time.Duration
 }
 
 type RefreshRequest struct {
@@ -24,15 +25,16 @@ type RefreshRequest struct {
 	Term      string
 }
 
-func NewService(store Store, qasClient qas.Client, logger *log.Logger, eventLogger mwslog.Logger, cacheTime time.Duration, maxCacheTime time.Duration, refreshLease time.Duration) *Service {
+func NewService(store Store, qasClient qas.Client, logger *log.Logger, eventLogger mwslog.Logger, cacheTime time.Duration, maxCacheTime time.Duration, refreshLease time.Duration, refreshTimeout time.Duration) *Service {
 	return &Service{
-		store:        store,
-		maxCacheTime: maxCacheTime,
-		cacheTime:    cacheTime,
-		refreshLease: refreshLease,
-		qasClient:    qasClient,
-		logger:       logger,
-		eventLogger:  eventLogger,
+		store:          store,
+		maxCacheTime:   maxCacheTime,
+		cacheTime:      cacheTime,
+		refreshLease:   refreshLease,
+		refreshTimeout: refreshTimeout,
+		qasClient:      qasClient,
+		logger:         logger,
+		eventLogger:    eventLogger,
 	}
 }
 
@@ -182,7 +184,7 @@ func (s *Service) refreshNow(ctx context.Context, key string, refresh RefreshReq
 }
 
 func (s *Service) refresh(ctx context.Context, key string, refresh RefreshRequest) {
-	ctx, cancel := context.WithTimeout(ctx, s.refreshLease)
+	ctx, cancel := context.WithTimeout(ctx, s.refreshTimeout)
 	defer cancel()
 
 	if _, err := s.refreshNow(ctx, key, refresh); err != nil {
