@@ -139,9 +139,7 @@ func (s *Service) refreshNow(ctx context.Context, key string, refresh RefreshReq
 			Message:    err.Error(),
 		})
 
-		if failErr := s.store.FailRefresh(ctx, key, err); failErr != nil {
-			return nil, fmt.Errorf("QAS refresh failed: %w; recording failure: %v", err, failErr)
-		}
+		s.failRefresh(key, err)
 
 		return nil, fmt.Errorf("QAS refresh failed: %w", err)
 	}
@@ -167,9 +165,10 @@ func (s *Service) refreshNow(ctx context.Context, key string, refresh RefreshReq
 			Message:   err.Error(),
 		})
 
-		if failErr := s.store.FailRefresh(ctx, key, err); failErr != nil {
-			return nil, fmt.Errorf("save refreshed cache: %w; recording failure: %v", err, failErr)
-		}
+		s.failRefresh(key, err)
+		//if failErr := s.store.FailRefresh(ctx, key, err); failErr != nil {
+		//	return nil, fmt.Errorf("save refreshed cache: %w; recording failure: %v", err, failErr)
+		//}
 
 		return nil, fmt.Errorf("save refreshed cache: %w", err)
 	}
@@ -229,6 +228,15 @@ func (s *Service) waitForRefresh(ctx context.Context, key string, refresh Refres
 		}
 	}
 
+}
+
+func (s *Service) failRefresh(key string, err error) {
+	cleanupCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if failErr := s.store.FailRefresh(cleanupCtx, key, err); failErr != nil {
+		s.logger.Printf("cache %q: failed to clear refresh lease after error %v: %v", key, err, failErr)
+	}
 }
 
 func (s *Service) logEvent(ctx context.Context, event mwslog.LogEvent) {
