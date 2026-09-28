@@ -53,7 +53,7 @@ func main() {
 	}
 	qasClient := qas.NewHTTPClient(httpClient, cfg.QASDomain, cfg.QASSuffix, cfg.QueryParams, cfg.QASUser, cfg.QASPassword)
 	cacheStore := cache.NewSQLServerStore(database)
-	cacheService := cache.NewService(cacheStore, qasClient, log.Default(), appLogger, time.Duration(cfg.CacheTime)*time.Second, time.Duration(cfg.MaxCacheTime)*time.Second, time.Duration(cfg.RefreshLeaseTime)*time.Second, time.Duration(cfg.RefreshLeaseTime)*time.Second)
+	cacheService := cache.NewService(cacheStore, qasClient, log.Default(), appLogger, time.Duration(cfg.CacheTime)*time.Second, time.Duration(cfg.MaxCacheTime)*time.Second, time.Duration(cfg.RefreshLeaseTime)*time.Second, time.Duration(cfg.RefreshTimeout)*time.Second)
 
 	httpServer := api.NewServer(cfg, cacheService, appLogger)
 	log.Printf("mws-api starting on %s", cfg.Addr)
