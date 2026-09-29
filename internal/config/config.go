@@ -14,6 +14,7 @@ type Config struct {
 	SQLServer              string            `json:"sql_server"`
 	SQLDatabase            string            `json:"sql_database"`
 	TrustServerCertificate bool              `json:"sql_trust_server_certificate"`
+	CacheWarmup            bool              `json:"cache_warmup"`
 	CacheTime              int               `json:"cache_time"`
 	MaxCacheTime           int               `json:"max_cache_time"`
 	RefreshLeaseTime       int               `json:"refresh_lease_time"`

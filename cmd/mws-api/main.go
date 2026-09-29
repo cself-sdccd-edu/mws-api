@@ -2,7 +2,8 @@ package main
 
 import (
 	"context"
-	//"encoding/json"
+	"flag"
+	"fmt"
 	"github.com/cself-sdccd-edu/mws-api/internal/api"
 	"github.com/cself-sdccd-edu/mws-api/internal/cache"
 	"github.com/cself-sdccd-edu/mws-api/internal/config"
@@ -17,18 +18,14 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-	"flag"
 )
+
 const defaultConfigPath = "/etc/mwsapi/config.json"
+
 func main() {
 	// first load configuration and exit if there's a failure
-	//configPath := os.Getenv("MWSAPI_CONFIG")
 	configPath := flag.String("config", defaultConfigPath, "path to application configuration file")
 	flag.Parse()
-
-	//if configPath == "" {
-	//	configPath = "config/app.json"
-	//}
 
 	cfg, err := config.Load(*configPath)
 	if err != nil {
@@ -55,9 +52,25 @@ func main() {
 	httpClient := &http.Client{
 		Timeout: time.Duration(cfg.RefreshTimeout) * time.Second,
 	}
-	qasClient := qas.NewHTTPClient(httpClient, cfg.QASDomain, cfg.QASSuffix, cfg.QueryParams, cfg.QASUser, cfg.QASPassword)
+	qasClient := qas.NewHTTPClient(
+		httpClient,
+		cfg.QASDomain,
+		cfg.QASSuffix,
+		cfg.QueryParams,
+		cfg.QASUser,
+		cfg.QASPassword,
+	)
 	cacheStore := cache.NewSQLServerStore(database)
-	cacheService := cache.NewService(cacheStore, qasClient, log.Default(), appLogger, time.Duration(cfg.CacheTime)*time.Second, time.Duration(cfg.MaxCacheTime)*time.Second, time.Duration(cfg.RefreshLeaseTime)*time.Second, time.Duration(cfg.RefreshTimeout)*time.Second)
+	cacheService := cache.NewService(
+		cacheStore,
+		qasClient,
+		log.Default(),
+		appLogger,
+		time.Duration(cfg.CacheTime)*time.Second,
+		time.Duration(cfg.MaxCacheTime)*time.Second,
+		time.Duration(cfg.RefreshLeaseTime)*time.Second,
+		time.Duration(cfg.RefreshTimeout)*time.Second,
+	)
 
 	httpServer := api.NewServer(cfg, cacheService, appLogger)
 	log.Printf("mws-api starting on %s", cfg.Addr)
@@ -75,6 +88,15 @@ func main() {
 	go func() {
 		serverErrors <- httpServer.Serve(ln)
 	}()
+
+	// warm up the cache immediately if the config says to
+	if cfg.CacheWarmup {
+		go func() {
+			warmupCtx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+			defer cancel()
+			warmCache(warmupCtx, cacheService, cfg)
+		}()
+	}
 
 	shutdownSignal := make(chan os.Signal, 1)
 
@@ -109,4 +131,54 @@ func main() {
 	}
 
 	log.Println("shutdown complete")
+}
+
+func startupTerms(now time.Time) []string {
+	year := now.Year()
+	termYear := fmt.Sprintf("%d%02d", year/1000, year%100)
+
+	switch now.Month() {
+	case time.January, time.February, time.March:
+		return []string{termYear + "3", termYear + "5"}
+
+	case time.April, time.May, time.June, time.July, time.August, time.September:
+		return []string{termYear + "5", termYear + "7"}
+
+	default:
+		nextYear := year + 1
+		nextTermYear := fmt.Sprintf("%d%02d", nextYear/1000, nextYear%100)
+		return []string{nextTermYear + "3"}
+	}
+}
+
+func warmCache(ctx context.Context, cacheService *cache.Service, cfg config.Config) {
+	terms := startupTerms(time.Now())
+	careers := []string{"ugrd", "ce"}
+
+	log.Printf("warming cache for terms: %v", terms)
+
+	for _, term := range terms {
+		for _, career := range careers {
+			queryName, ok := cfg.Queries[career]
+			if !ok {
+				log.Printf("cache warm-up skipped %s/%s: query not configured", term, career)
+				continue
+			}
+
+			key := fmt.Sprintf("schedule:%s:%s", term, career)
+
+			log.Printf("warming cache: %s", key)
+
+			_, err := cacheService.Get(ctx, key, cache.RefreshRequest{
+				QueryName: queryName,
+				Term:      term,
+			})
+			if err != nil {
+				log.Printf("cache warm-up failed for %s: %v", key, err)
+				continue
+			}
+
+			log.Printf("cache warm-up completed: %s", key)
+		}
+	}
 }
