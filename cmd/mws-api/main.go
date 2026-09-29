@@ -17,21 +17,25 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	"flag"
 )
-
+const defaultConfigPath = "/etc/mwsapi/config.json"
 func main() {
 	// first load configuration and exit if there's a failure
-	configPath := os.Getenv("MWSAPI_CONFIG")
-	if configPath == "" {
-		configPath = "config/app.json"
-	}
+	//configPath := os.Getenv("MWSAPI_CONFIG")
+	configPath := flag.String("config", defaultConfigPath, "path to application configuration file")
+	flag.Parse()
 
-	cfg, err := config.Load(configPath)
+	//if configPath == "" {
+	//	configPath = "config/app.json"
+	//}
+
+	cfg, err := config.Load(*configPath)
 	if err != nil {
 		log.Printf("configuration error: %v", err)
 		os.Exit(1)
 	}
-	log.Printf("loading configuration from %s", configPath)
+	log.Printf("loading configuration from %s", *configPath)
 
 	// create context for our sevices
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
