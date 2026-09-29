@@ -210,9 +210,10 @@ func (s *Service) waitForRefresh(ctx context.Context, key string, refresh Refres
 
 		if entry != nil && entry.HasData && time.Since(entry.UpdatedAt) < s.maxCacheTime {
 			s.logEvent(ctx, mwslog.LogEvent{
-				Event:    "cache_refresh_complete",
-				CacheKey: key,
-				Message:  "waited for another request to refresh cache",
+				RequestID: mwslog.RequestID(ctx),
+				Event:     "cache_refresh_complete",
+				CacheKey:  key,
+				Message:   "waited for another request to refresh cache",
 			})
 
 			return entry, nil
