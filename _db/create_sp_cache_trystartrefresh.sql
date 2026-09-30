@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.Cache_TryStartRefresh
+CREATE OR ALTER   PROCEDURE [dbo].[Cache_TryStartRefresh]
     @CacheKey varchar(200),
     @LeaseSeconds int
 AS
@@ -39,4 +39,3 @@ BEGIN
     SELECT @Claimed AS Claimed;
 END
 GO
-

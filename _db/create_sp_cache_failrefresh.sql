@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.Cache_FailRefresh
+CREATE OR ALTER   PROCEDURE [dbo].[Cache_FailRefresh]
     @CacheKey varchar(200),
     @Error nvarchar(1000)
 AS
@@ -11,4 +11,3 @@ BEGIN
     WHERE CacheKey = @CacheKey;
 END
 GO
-

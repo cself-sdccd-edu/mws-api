@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.Cache_Save
+CREATE OR ALTER   PROCEDURE [dbo].[Cache_Save]
     @CacheKey varchar(200),
     @Data varbinary(max)
 AS
@@ -14,4 +14,3 @@ BEGIN
     WHERE CacheKey = @CacheKey;
 END
 GO
-

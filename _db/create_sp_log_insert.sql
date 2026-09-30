@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE dbo.Log_Insert
+CREATE OR ALTER   PROCEDURE [dbo].[Log_Insert]
     @RequestID uniqueidentifier = NULL,
     @Event varchar(50),
     @ClientIP varchar(45) = NULL,
@@ -56,3 +56,4 @@ BEGIN
         @Details
     );
 END;
+GO

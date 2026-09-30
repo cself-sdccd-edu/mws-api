@@ -1,13 +1,3 @@
-USE [MWSAPI]
-GO
-
-/****** Object:  Table [dbo].[Cache]    Script Date: 9/23/2026 1:55:38 PM ******/
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
-
 CREATE TABLE [dbo].[Cache](
 	[CacheKey] [varchar](200) NOT NULL,
 	[Data] [varbinary](max) NULL,
