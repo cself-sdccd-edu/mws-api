@@ -1,6 +1,6 @@
 {
   "addr": ":6767",
-  "system_version": "development",
+  "system_version": "staging",
   "server_number": 2,
   "sql_server": "DCDB03\\WEBAPPS_STAGING",
   "sql_database": "MWSAPI_STG",

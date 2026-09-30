@@ -3,7 +3,8 @@ set -a; source .env; set +a
 
 TERMS=(2267 2265 2263 2257 2255 2253)
 CAREERS=(ugrd ce)
-URL="http://localhost:6767"
+#URL="http://mwsapi02.sdccd.edu:6767"
+URL="https://mws-api.staging.sdccd.edu"
 ENDPOINT="/schedule"
 
 while true; do
