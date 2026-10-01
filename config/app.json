@@ -1,6 +1,6 @@
 {
   "addr": ":6767",
-  "system_version": "development",
+  "system_version": "staging",
   "server_number": 1,
   "sql_server": "DCDB03\\WEBAPPS_STAGING",
   "sql_database": "MWSAPI_STG",
@@ -22,34 +22,6 @@
       "queries": {
         "ugrd": "X_SR_CLSSCHED_DATA",
         "ce": "X_SR_CLSSCHED_DATA_CE"
-      },
-      "query_params": [
-        {
-          "name": "isconnectedquery",
-          "value": "n"
-        },
-        {
-          "name": "maxrows",
-          "value": "9999"
-        },
-        {
-          "name": "prompt_uniquepromptname",
-          "value": "BIND1"
-        },
-        {
-          "name": "prompt_fieldvalue",
-          "value": "{TERM}"
-        },
-        {
-          "name": "json_resp",
-          "value": "true"
-        }
-      ]
-    },
-    "catalog": {
-      "queries": {
-        "urgd": "X_SR_CATALOG_DATA",
-        "ce": "X_SR_CATALOG_DATA_CE"
       },
       "query_params": [
         {
