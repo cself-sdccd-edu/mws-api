@@ -135,8 +135,9 @@ func (s *Service) refreshNow(ctx context.Context, key string, refresh RefreshReq
 	requestID := mwslog.RequestID(ctx)
 
 	data, err := s.qasClient.Query(ctx, qas.QueryRequest{
-		QueryName: refresh.QueryName,
-		Term:      refresh.Term,
+		EndpointName: refresh.EndpointName,
+		QueryName:    refresh.QueryName,
+		Term:         refresh.Term,
 	})
 	duration := time.Since(start)
 
