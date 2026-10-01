@@ -21,11 +21,20 @@ type Service struct {
 }
 
 type RefreshRequest struct {
-	QueryName string
-	Term      string
+	EndpointName string
+	QueryName    string
+	Term         string
 }
 
-func NewService(store Store, qasClient qas.Client, logger *log.Logger, eventLogger mwslog.Logger, cacheTime time.Duration, maxCacheTime time.Duration, refreshLease time.Duration, refreshTimeout time.Duration) *Service {
+func NewService(store Store,
+	qasClient qas.Client,
+	logger *log.Logger,
+	eventLogger mwslog.Logger,
+	cacheTime time.Duration,
+	maxCacheTime time.Duration,
+	refreshLease time.Duration,
+	refreshTimeout time.Duration) *Service {
+
 	return &Service{
 		store:          store,
 		maxCacheTime:   maxCacheTime,
@@ -125,7 +134,10 @@ func (s *Service) refreshNow(ctx context.Context, key string, refresh RefreshReq
 	start := time.Now()
 	requestID := mwslog.RequestID(ctx)
 
-	data, err := s.qasClient.Query(ctx, refresh.QueryName, refresh.Term)
+	data, err := s.qasClient.Query(ctx, qas.QueryRequest{
+		QueryName: refresh.QueryName,
+		Term:      refresh.Term,
+	})
 	duration := time.Since(start)
 
 	if err != nil {

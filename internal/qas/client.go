@@ -14,43 +14,49 @@ import (
 )
 
 type Client interface {
-	Query(ctx context.Context, queryName string, term string) ([]byte, error)
+	Query(ctx context.Context, request QueryRequest) ([]byte, error)
+}
+
+type QueryRequest struct {
+	EndpointName string
+	QueryName    string
+	Term         string
 }
 
 type HTTPClient struct {
-	client      *http.Client
-	domain      string
-	urlSuffix   string
-	queryParams []config.QueryParam
-	user        string
-	password    string
+	client    *http.Client
+	domain    string
+	urlSuffix string
+	endpoints map[string]config.EndpointConfig
+	user      string
+	password  string
 }
 
-func NewHTTPClient(client *http.Client, domain string, urlSuffix string, queryParams []config.QueryParam, user string, password string) *HTTPClient {
+func NewHTTPClient(client *http.Client, domain string, urlSuffix string, endpoints map[string]config.EndpointConfig, user string, password string) *HTTPClient {
 	return &HTTPClient{
-		client:      client,
-		domain:      domain,
-		urlSuffix:   urlSuffix,
-		queryParams: queryParams,
-		user:        user,
-		password:    password,
+		client:    client,
+		domain:    domain,
+		urlSuffix: urlSuffix,
+		endpoints: endpoints,
+		user:      user,
+		password:  password,
 	}
 }
 
-func (c *HTTPClient) Query(ctx context.Context, queryName string, term string) ([]byte, error) {
-	suffix := strings.ReplaceAll(c.urlSuffix, "{QUERY_NAME}", url.PathEscape(queryName))
+func (c *HTTPClient) Query(ctx context.Context, query QueryRequest) ([]byte, error) {
+	suffix := strings.ReplaceAll(c.urlSuffix, "{QUERY_NAME}", url.PathEscape(query.QueryName))
 
-	var query []string
-	for _, param := range c.queryParams {
-		value := strings.ReplaceAll(param.Value, "{TERM}", term)
-		query = append(query, url.QueryEscape(param.Name)+"="+url.QueryEscape(value))
+	var urlQuery []string
+	for _, param := range c.endpoints[query.EndpointName].QueryParams {
+		value := strings.ReplaceAll(param.Value, "{TERM}", query.Term)
+		urlQuery = append(urlQuery, url.QueryEscape(param.Name)+"="+url.QueryEscape(value))
 		//log.Default().Printf("query param: %s = %s", param.Name, value)
 	}
-	if len(query) == 0 {
+	if len(urlQuery) == 0 {
 		return nil, fmt.Errorf("no query params parsed")
 	}
 
-	requestURL := strings.TrimRight(c.domain, "/") + suffix + strings.Join(query, "&")
+	requestURL := strings.TrimRight(c.domain, "/") + suffix + strings.Join(urlQuery, "&")
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, requestURL, nil)
 	if err != nil {

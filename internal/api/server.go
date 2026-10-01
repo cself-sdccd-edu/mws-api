@@ -40,7 +40,7 @@ func (s *Server) routes() http.Handler {
 		requestMiddleware(s.logger,
 			authMiddleware(
 				s.config,
-				http.HandlerFunc(s.scheduleHandler),
+				http.HandlerFunc(s.endpointHandler),
 			),
 		),
 	)

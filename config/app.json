@@ -1,7 +1,7 @@
 {
   "addr": ":6767",
   "system_version": "development",
-  "server_number": 2,
+  "server_number": 1,
   "sql_server": "DCDB03\\WEBAPPS_STAGING",
   "sql_database": "MWSAPI_STG",
   "sql_trust_server_certificate": true,
@@ -12,35 +12,67 @@
   "refresh_timeout": 120,
   "qas_domain": "https://csuat.sdccd.edu",
   "qas_url_suffix": "/PSIGW/RESTListeningConnector/PSFT_CS/ExecuteQuery.v1/PUBLIC/{QUERY_NAME}/JSON/NONFILE?",
-  "query_params": [
-    {
-      "name": "isconnectedquery",
-      "value": "n"
-    },
-    {
-      "name": "maxrows",
-      "value": "9999"
-    },
-    {
-      "name": "prompt_uniquepromptname",
-      "value": "BIND1"
-    },
-    {
-      "name": "prompt_fieldvalue",
-      "value": "{TERM}"
-    },
-    {
-      "name": "json_resp",
-      "value": "true"
-    }
-  ],
-  "queries": {
-    "ugrd": "X_SR_CLSSCHED_DATA",
-    "ce": "X_SR_CLSSCHED_DATA_CE"
-  },
   "auth_header": "X-NDnerBYETrTEHL6F",
   "cors_origins": [
     "https://www.sdccd.edu",
     "https://webtest11.sdccd.edu"
-  ]
+  ],
+  "endpoints": {
+    "schedule": {
+      "queries": {
+        "ugrd": "X_SR_CLSSCHED_DATA",
+        "ce": "X_SR_CLSSCHED_DATA_CE"
+      },
+      "query_params": [
+        {
+          "name": "isconnectedquery",
+          "value": "n"
+        },
+        {
+          "name": "maxrows",
+          "value": "9999"
+        },
+        {
+          "name": "prompt_uniquepromptname",
+          "value": "BIND1"
+        },
+        {
+          "name": "prompt_fieldvalue",
+          "value": "{TERM}"
+        },
+        {
+          "name": "json_resp",
+          "value": "true"
+        }
+      ]
+    },
+    "catalog": {
+      "queries": {
+        "urgd": "X_SR_CATALOG_DATA",
+        "ce": "X_SR_CATALOG_DATA_CE"
+      },
+      "query_params": [
+        {
+          "name": "isconnectedquery",
+          "value": "n"
+        },
+        {
+          "name": "maxrows",
+          "value": "9999"
+        },
+        {
+          "name": "prompt_uniquepromptname",
+          "value": "BIND1"
+        },
+        {
+          "name": "prompt_fieldvalue",
+          "value": "{TERM}"
+        },
+        {
+          "name": "json_resp",
+          "value": "true"
+        }
+      ]
+    }
+  }
 }
