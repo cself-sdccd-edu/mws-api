@@ -33,6 +33,8 @@ func main() {
 		os.Exit(1)
 	}
 	log.Printf("loading configuration from %s", *configPath)
+	log.Printf("environment: %s", cfg.SystemVersion)
+	log.Printf("version: %s %s %s", version.Version, version.Commit, version.BuildDate)
 
 	// create context for our sevices
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -74,8 +76,6 @@ func main() {
 
 	httpServer := api.NewServer(cfg, cacheService, appLogger)
 	log.Printf("mws-api starting on %s", cfg.Addr)
-	log.Printf("environment: %s", cfg.SystemVersion)
-	log.Printf("version: %s %s %s", version.Version, version.Commit, version.BuildDate)
 	log.Printf("connected to SQL Server database %s", cfg.SQLDatabase)
 
 	// configure the listen requirements, start the server, and listen for shutdown signals
