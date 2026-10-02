@@ -157,6 +157,8 @@ func (s *Service) refreshNow(ctx context.Context, key string, refresh RefreshReq
 		return nil, fmt.Errorf("QAS refresh failed: %w", err)
 	}
 
+	s.logger.Printf("cache refreshed for %q", key)
+
 	s.logEvent(ctx, mwslog.LogEvent{
 		RequestID:  requestID,
 		Event:      "qas_refresh",
@@ -179,9 +181,6 @@ func (s *Service) refreshNow(ctx context.Context, key string, refresh RefreshReq
 		})
 
 		s.failRefresh(key, err)
-		//if failErr := s.store.FailRefresh(ctx, key, err); failErr != nil {
-		//	return nil, fmt.Errorf("save refreshed cache: %w; recording failure: %v", err, failErr)
-		//}
 
 		return nil, fmt.Errorf("save refreshed cache: %w", err)
 	}
