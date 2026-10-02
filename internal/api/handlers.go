@@ -113,13 +113,15 @@ func (s *Server) scheduleHandler(w http.ResponseWriter, r *http.Request) {
 	switch career {
 	case "ugrd":
 		refresh = cache.RefreshRequest{
-			QueryName: s.config.Endpoints["schedule"].Queries["ugrd"],
-			Term:      term,
+			EndpointName: "schedule",
+			QueryName:    s.config.Endpoints["schedule"].Queries["ugrd"],
+			Term:         term,
 		}
 	case "ce":
 		refresh = cache.RefreshRequest{
-			QueryName: s.config.Endpoints["schedule"].Queries["ce"],
-			Term:      term,
+			EndpointName: "schedule",
+			QueryName:    s.config.Endpoints["schedule"].Queries["ce"],
+			Term:         term,
 		}
 	}
 
