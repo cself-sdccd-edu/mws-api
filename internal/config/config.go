@@ -22,16 +22,14 @@ type Config struct {
 	QASDomain              string                    `json:"qas_domain"`
 	QASSuffix              string                    `json:"qas_url_suffix"`
 	Endpoints              map[string]EndpointConfig `json:"endpoints"`
-	//QueryParams            []QueryParam      `json:"query_params"`
-	//Queries                map[string]string `json:"queries"`
-	AuthHeader  string   `json:"auth_header"`
-	CORSOrigins []string `json:"cors_origins"`
-
-	SQLUser     string `json:"-"`
-	SQLPassword string `json:"-"`
-	QASUser     string `json:"-"`
-	QASPassword string `json:"-"`
-	AuthSecret  string `json:"-"`
+	RequireAuth            bool                      `json:"require_auth"`
+	AuthHeader             string                    `json:"auth_header"`
+	CORSOrigins            []string                  `json:"cors_origins"`
+	SQLUser                string                    `json:"-"`
+	SQLPassword            string                    `json:"-"`
+	QASUser                string                    `json:"-"`
+	QASPassword            string                    `json:"-"`
+	AuthSecret             string                    `json:"-"`
 }
 
 type QueryParam struct {
@@ -112,7 +110,7 @@ func (cfg Config) Validate() error {
 	}
 
 	if len(cfg.Endpoints) == 0 {
-		return errors.New("queries must contain at least one query")
+		return errors.New("there must be at least one endpoint defined")
 	}
 
 	return nil

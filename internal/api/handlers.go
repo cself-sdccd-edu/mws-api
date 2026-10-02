@@ -73,7 +73,7 @@ func (s *Server) endpointHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	if _, err := w.Write(entry.Data); err != nil {
 		return
 	}
@@ -136,7 +136,7 @@ func (s *Server) scheduleHandler(w http.ResponseWriter, r *http.Request) {
 	//fmt.Fprintln(w, "/schedule endpoint. params: term=", term, "career=", career)
 	//fmt.Fprintln(w, "entry updated at", entry.UpdatedAt)
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	if _, err := w.Write(entry.Data); err != nil {
 		return
 	}

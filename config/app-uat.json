@@ -12,6 +12,7 @@
   "refresh_timeout": 120,
   "qas_domain": "https://csuat.sdccd.edu",
   "qas_url_suffix": "/PSIGW/RESTListeningConnector/PSFT_CS/ExecuteQuery.v1/PUBLIC/{QUERY_NAME}/JSON/NONFILE?",
+  "require_auth": true,
   "auth_header": "X-NDnerBYETrTEHL6F",
   "cors_origins": [
     "https://www.sdccd.edu",
