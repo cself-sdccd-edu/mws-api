@@ -5,42 +5,47 @@
   "sql_server": "DCDB03\\WEBAPPS_STAGING",
   "sql_database": "MWSAPI_DEV",
   "sql_trust_server_certificate": true,
-  "cache_warmup": true,
-  "cache_time": 60,
+  "cache_warmup": false,
+  "cache_time": 600,
   "max_cache_time": 43200,
   "refresh_lease_time": 180,
   "refresh_timeout": 120,
   "qas_domain": "https://csdev61.dev.sdccd.edu",
   "qas_url_suffix": "/PSIGW/RESTListeningConnector/PSFT_CS/ExecuteQuery.v1/PUBLIC/{QUERY_NAME}/JSON/NONFILE?",
-  "query_params": [
-    {
-      "name": "isconnectedquery",
-      "value": "n"
-    },
-    {
-      "name": "maxrows",
-      "value": "9999"
-    },
-    {
-      "name": "prompt_uniquepromptname",
-      "value": "BIND1"
-    },
-    {
-      "name": "prompt_fieldvalue",
-      "value": "{TERM}"
-    },
-    {
-      "name": "json_resp",
-      "value": "true"
-    }
-  ],
-  "queries": {
-    "ugrd": "X_SR_CLSSCHED_DATA",
-    "ce": "X_SR_CLSSCHED_DATA_CE"
-  },
+  "require_auth": true,
   "auth_header": "X-NDnerBYETrTEHL6F",
   "cors_origins": [
     "https://www.sdccd.edu",
     "https://webtest11.sdccd.edu"
-  ]
+  ],
+  "endpoints": {
+    "schedule": {
+      "queries": {
+        "ugrd": "X_SR_CLSSCHED_DATA",
+        "ce": "X_SR_CLSSCHED_DATA_CE"
+      },
+      "query_params": [
+        {
+          "name": "isconnectedquery",
+          "value": "n"
+        },
+        {
+          "name": "maxrows",
+          "value": "9999"
+        },
+        {
+          "name": "prompt_uniquepromptname",
+          "value": "BIND1"
+        },
+        {
+          "name": "prompt_fieldvalue",
+          "value": "{TERM}"
+        },
+        {
+          "name": "json_resp",
+          "value": "true"
+        }
+      ]
+    }
+  }
 }

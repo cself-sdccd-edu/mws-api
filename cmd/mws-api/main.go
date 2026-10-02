@@ -33,6 +33,8 @@ func main() {
 		os.Exit(1)
 	}
 	log.Printf("loading configuration from %s", *configPath)
+	log.Printf("environment: %s", cfg.SystemVersion)
+	log.Printf("version: %s %s %s", version.Version, version.Commit, version.BuildDate)
 
 	// create context for our sevices
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -56,7 +58,7 @@ func main() {
 		httpClient,
 		cfg.QASDomain,
 		cfg.QASSuffix,
-		cfg.QueryParams,
+		cfg.Endpoints,
 		cfg.QASUser,
 		cfg.QASPassword,
 	)
@@ -74,8 +76,6 @@ func main() {
 
 	httpServer := api.NewServer(cfg, cacheService, appLogger)
 	log.Printf("mws-api starting on %s", cfg.Addr)
-	log.Printf("environment: %s", cfg.SystemVersion)
-	log.Printf("version: %s %s %s", version.Version, version.Commit, version.BuildDate)
 	log.Printf("connected to SQL Server database %s", cfg.SQLDatabase)
 
 	// configure the listen requirements, start the server, and listen for shutdown signals
@@ -155,11 +155,17 @@ func warmCache(ctx context.Context, cacheService *cache.Service, cfg config.Conf
 	terms := startupTerms(time.Now())
 	careers := []string{"ugrd", "ce"}
 
+	endpointConfig, ok := cfg.Endpoints["schedule"]
+	if !ok {
+		log.Printf("cache warm-up skipped: schedule endpoint is not configured")
+		return
+	}
+
 	log.Printf("warming cache for terms: %v", terms)
 
 	for _, term := range terms {
 		for _, career := range careers {
-			queryName, ok := cfg.Queries[career]
+			queryName, ok := endpointConfig.Queries[career]
 			if !ok {
 				log.Printf("cache warm-up skipped %s/%s: query not configured", term, career)
 				continue
@@ -170,8 +176,9 @@ func warmCache(ctx context.Context, cacheService *cache.Service, cfg config.Conf
 			log.Printf("warming cache: %s", key)
 
 			_, err := cacheService.Get(ctx, key, cache.RefreshRequest{
-				QueryName: queryName,
-				Term:      term,
+				EndpointName: "schedule",
+				QueryName:    queryName,
+				Term:         term,
 			})
 			if err != nil {
 				log.Printf("cache warm-up failed for %s: %v", key, err)

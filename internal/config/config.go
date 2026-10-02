@@ -8,34 +8,38 @@ import (
 )
 
 type Config struct {
-	Addr                   string            `json:"addr"`
-	SystemVersion          string            `json:"system_version"`
-	ServerNumber           int               `json:"server_number"`
-	SQLServer              string            `json:"sql_server"`
-	SQLDatabase            string            `json:"sql_database"`
-	TrustServerCertificate bool              `json:"sql_trust_server_certificate"`
-	CacheWarmup            bool              `json:"cache_warmup"`
-	CacheTime              int               `json:"cache_time"`
-	MaxCacheTime           int               `json:"max_cache_time"`
-	RefreshLeaseTime       int               `json:"refresh_lease_time"`
-	RefreshTimeout         int               `json:"refresh_timeout"`
-	QASDomain              string            `json:"qas_domain"`
-	QASSuffix              string            `json:"qas_url_suffix"`
-	QueryParams            []QueryParam      `json:"query_params"`
-	Queries                map[string]string `json:"queries"`
-	AuthHeader             string            `json:"auth_header"`
-	CORSOrigins            []string          `json:"cors_origins"`
-
-	SQLUser     string `json:"-"`
-	SQLPassword string `json:"-"`
-	QASUser     string `json:"-"`
-	QASPassword string `json:"-"`
-	AuthSecret  string `json:"-"`
+	Addr                   string                    `json:"addr"`
+	SystemVersion          string                    `json:"system_version"`
+	ServerNumber           int                       `json:"server_number"`
+	SQLServer              string                    `json:"sql_server"`
+	SQLDatabase            string                    `json:"sql_database"`
+	TrustServerCertificate bool                      `json:"sql_trust_server_certificate"`
+	CacheWarmup            bool                      `json:"cache_warmup"`
+	CacheTime              int                       `json:"cache_time"`
+	MaxCacheTime           int                       `json:"max_cache_time"`
+	RefreshLeaseTime       int                       `json:"refresh_lease_time"`
+	RefreshTimeout         int                       `json:"refresh_timeout"`
+	QASDomain              string                    `json:"qas_domain"`
+	QASSuffix              string                    `json:"qas_url_suffix"`
+	Endpoints              map[string]EndpointConfig `json:"endpoints"`
+	RequireAuth            bool                      `json:"require_auth"`
+	AuthHeader             string                    `json:"auth_header"`
+	CORSOrigins            []string                  `json:"cors_origins"`
+	SQLUser                string                    `json:"-"`
+	SQLPassword            string                    `json:"-"`
+	QASUser                string                    `json:"-"`
+	QASPassword            string                    `json:"-"`
+	AuthSecret             string                    `json:"-"`
 }
 
 type QueryParam struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
+}
+
+type EndpointConfig struct {
+	Queries     map[string]string `json:"queries"`
+	QueryParams []QueryParam      `json:"query_params"`
 }
 
 func Load(path string) (Config, error) {
@@ -105,8 +109,8 @@ func (cfg Config) Validate() error {
 		return errors.New("refresh_timeout must be less than refresh_lease_time")
 	}
 
-	if len(cfg.Queries) == 0 {
-		return errors.New("queries must contain at least one query")
+	if len(cfg.Endpoints) == 0 {
+		return errors.New("there must be at least one endpoint defined")
 	}
 
 	return nil

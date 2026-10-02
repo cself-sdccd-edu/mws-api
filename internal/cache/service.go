@@ -21,11 +21,20 @@ type Service struct {
 }
 
 type RefreshRequest struct {
-	QueryName string
-	Term      string
+	EndpointName string
+	QueryName    string
+	Term         string
 }
 
-func NewService(store Store, qasClient qas.Client, logger *log.Logger, eventLogger mwslog.Logger, cacheTime time.Duration, maxCacheTime time.Duration, refreshLease time.Duration, refreshTimeout time.Duration) *Service {
+func NewService(store Store,
+	qasClient qas.Client,
+	logger *log.Logger,
+	eventLogger mwslog.Logger,
+	cacheTime time.Duration,
+	maxCacheTime time.Duration,
+	refreshLease time.Duration,
+	refreshTimeout time.Duration) *Service {
+
 	return &Service{
 		store:          store,
 		maxCacheTime:   maxCacheTime,
@@ -47,7 +56,7 @@ func (s *Service) Get(ctx context.Context, key string, refresh RefreshRequest) (
 
 	if entry != nil && entry.HasData {
 		age := time.Since(entry.UpdatedAt)
-		s.logger.Printf("requestid %v cache %q age=%v cache_time=%v max_cache_time=%v updated_at=%v", requestID, key, age, s.cacheTime, s.maxCacheTime, entry.UpdatedAt)
+		//s.logger.Printf("requestid %v cache %q age=%v cache_time=%v max_cache_time=%v updated_at=%v", requestID, key, age, s.cacheTime, s.maxCacheTime, entry.UpdatedAt)
 		if age < s.cacheTime {
 			s.logEvent(ctx, mwslog.LogEvent{
 				RequestID: requestID,
@@ -125,7 +134,11 @@ func (s *Service) refreshNow(ctx context.Context, key string, refresh RefreshReq
 	start := time.Now()
 	requestID := mwslog.RequestID(ctx)
 
-	data, err := s.qasClient.Query(ctx, refresh.QueryName, refresh.Term)
+	data, err := s.qasClient.Query(ctx, qas.QueryRequest{
+		EndpointName: refresh.EndpointName,
+		QueryName:    refresh.QueryName,
+		Term:         refresh.Term,
+	})
 	duration := time.Since(start)
 
 	if err != nil {
@@ -143,6 +156,8 @@ func (s *Service) refreshNow(ctx context.Context, key string, refresh RefreshReq
 
 		return nil, fmt.Errorf("QAS refresh failed: %w", err)
 	}
+
+	s.logger.Printf("cache refreshed for %q", key)
 
 	s.logEvent(ctx, mwslog.LogEvent{
 		RequestID:  requestID,
@@ -166,9 +181,6 @@ func (s *Service) refreshNow(ctx context.Context, key string, refresh RefreshReq
 		})
 
 		s.failRefresh(key, err)
-		//if failErr := s.store.FailRefresh(ctx, key, err); failErr != nil {
-		//	return nil, fmt.Errorf("save refreshed cache: %w; recording failure: %v", err, failErr)
-		//}
 
 		return nil, fmt.Errorf("save refreshed cache: %w", err)
 	}

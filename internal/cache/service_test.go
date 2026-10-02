@@ -8,6 +8,7 @@ import (
 	"time"
 
 	mwslog "github.com/cself-sdccd-edu/mws-api/internal/log"
+	"github.com/cself-sdccd-edu/mws-api/internal/qas"
 )
 
 type testStore struct {
@@ -68,7 +69,7 @@ type testQASClient struct {
 	queryRelease chan struct{}
 }
 
-func (c *testQASClient) Query(ctx context.Context, queryName string, term string) ([]byte, error) {
+func (c *testQASClient) Query(ctx context.Context, request qas.QueryRequest) ([]byte, error) {
 	c.queryCalled++
 
 	if c.queryStarted != nil {

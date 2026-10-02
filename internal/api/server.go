@@ -35,35 +35,59 @@ func (s *Server) routes() http.Handler {
 
 	mux.HandleFunc("/api/health", healthHandler)
 
-	mux.Handle(
-		"GET /schedule",
-		requestMiddleware(s.logger,
-			authMiddleware(
-				s.config,
-				http.HandlerFunc(s.scheduleHandler),
+	if s.config.RequireAuth {
+		mux.Handle(
+			"GET /schedule",
+			requestMiddleware(s.logger,
+				authMiddleware(
+					s.config,
+					http.HandlerFunc(s.endpointHandler),
+				),
 			),
-		),
-	)
+		)
+	} else {
+		mux.Handle(
+			"GET /schedule",
+			requestMiddleware(s.logger,
+				http.HandlerFunc(s.endpointHandler),
+			),
+		)
+	}
 
 	// backwards compatible routes (may be removed later)
-	mux.Handle(
-		"GET /{$}",
-		requestMiddleware(s.logger,
-			authMiddleware(
-				s.config,
+	if s.config.RequireAuth {
+		mux.Handle(
+			"GET /{$}",
+			requestMiddleware(s.logger,
+				authMiddleware(
+					s.config,
+					http.HandlerFunc(s.scheduleHandler),
+				),
+			),
+		)
+		mux.Handle(
+			"GET /index.cfm",
+			requestMiddleware(s.logger,
+				authMiddleware(
+					s.config,
+					http.HandlerFunc(s.scheduleHandler),
+				),
+			),
+		)
+	} else {
+		mux.Handle(
+			"GET /{$}",
+			requestMiddleware(s.logger,
 				http.HandlerFunc(s.scheduleHandler),
 			),
-		),
-	)
-	mux.Handle(
-		"GET /index.cfm",
-		requestMiddleware(s.logger,
-			authMiddleware(
-				s.config,
+		)
+		mux.Handle(
+			"GET /index.cfm",
+			requestMiddleware(s.logger,
 				http.HandlerFunc(s.scheduleHandler),
 			),
-		),
-	)
+		)
+	}
 
 	return mux
 }

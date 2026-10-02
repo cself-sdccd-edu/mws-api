@@ -26,16 +26,23 @@ func newTestClient(statusCode int, body string) *HTTPClient {
 			}, nil
 		}),
 	}
+
+	endpoints := map[string]config.EndpointConfig{
+		"schedule": {
+			QueryParams: []config.QueryParam{
+				{
+					Name:  "prompt_fieldvalue",
+					Value: "{TERM}",
+				},
+			},
+		},
+	}
+
 	return NewHTTPClient(
 		httpClient,
 		"https://example.invalid",
 		"/query/{QUERY_NAME}?",
-		[]config.QueryParam{
-			{
-				Name:  "prompt_fieldvalue",
-				Value: "{TERM}",
-			},
-		},
+		endpoints,
 		"test-user",
 		"test-password",
 	)
@@ -44,7 +51,11 @@ func newTestClient(statusCode int, body string) *HTTPClient {
 func TestQueryRejectsEmptyResponse(t *testing.T) {
 	client := newTestClient(http.StatusOK, "")
 
-	_, err := client.Query(context.Background(), "TEST_QUERY", "2267")
+	_, err := client.Query(context.Background(), QueryRequest{
+		EndpointName: "schedule",
+		QueryName:    "TEST_QUERY",
+		Term:         "2267",
+	})
 	if err == nil {
 		t.Fatal("expected empty QAS response to return an error")
 	}
@@ -53,7 +64,11 @@ func TestQueryRejectsEmptyResponse(t *testing.T) {
 func TestQueryRejectsWhitespaceResponse(t *testing.T) {
 	client := newTestClient(http.StatusOK, " \n\t ")
 
-	_, err := client.Query(context.Background(), "TEST_QUERY", "2267")
+	_, err := client.Query(context.Background(), QueryRequest{
+		EndpointName: "schedule",
+		QueryName:    "TEST_QUERY",
+		Term:         "2267",
+	})
 	if err == nil {
 		t.Fatal("expected whitespace QAS response to return an error")
 	}
@@ -62,7 +77,11 @@ func TestQueryRejectsWhitespaceResponse(t *testing.T) {
 func TestQueryRejectsInvalidJSON(t *testing.T) {
 	client := newTestClient(http.StatusOK, "<html>Login required</html>")
 
-	_, err := client.Query(context.Background(), "TEST_QUERY", "2267")
+	_, err := client.Query(context.Background(), QueryRequest{
+		EndpointName: "schedule",
+		QueryName:    "TEST_QUERY",
+		Term:         "2267",
+	})
 	if err == nil {
 		t.Fatal("expected invalid JSON to return an error")
 	}
@@ -71,7 +90,11 @@ func TestQueryRejectsInvalidJSON(t *testing.T) {
 func TestQueryAcceptsValidJSON(t *testing.T) {
 	client := newTestClient(http.StatusOK, `{"records":[{"term":"2267"}]}`)
 
-	data, err := client.Query(context.Background(), "TEST_QUERY", "2267")
+	data, err := client.Query(context.Background(), QueryRequest{
+		EndpointName: "schedule",
+		QueryName:    "TEST_QUERY",
+		Term:         "2267",
+	})
 	if err != nil {
 		t.Fatalf("expected valid JSON, got error: %v", err)
 	}
@@ -84,7 +107,11 @@ func TestQueryAcceptsValidJSON(t *testing.T) {
 func TestQueryRejectsUnsuccessfulStatus(t *testing.T) {
 	client := newTestClient(http.StatusBadGateway, `{"error":"upstream unavailable"}`)
 
-	_, err := client.Query(context.Background(), "TEST_QUERY", "2267")
+	_, err := client.Query(context.Background(), QueryRequest{
+		EndpointName: "schedule",
+		QueryName:    "TEST_QUERY",
+		Term:         "2267",
+	})
 	if err == nil {
 		t.Fatal("expected unsuccessful QAS status to return an error")
 	}
