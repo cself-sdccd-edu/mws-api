@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/cself-sdccd-edu/mws-api/internal/config"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -62,8 +61,6 @@ func (c *HTTPClient) Query(ctx context.Context, query QueryRequest) ([]byte, err
 	if err != nil {
 		return nil, fmt.Errorf("create QAS request: %w", err)
 	}
-	// DEBUG: remote this output later
-	log.Default().Printf("Request URL: %s", requestURL)
 
 	request.SetBasicAuth(c.user, c.password)
 

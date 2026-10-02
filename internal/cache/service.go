@@ -56,7 +56,7 @@ func (s *Service) Get(ctx context.Context, key string, refresh RefreshRequest) (
 
 	if entry != nil && entry.HasData {
 		age := time.Since(entry.UpdatedAt)
-		s.logger.Printf("requestid %v cache %q age=%v cache_time=%v max_cache_time=%v updated_at=%v", requestID, key, age, s.cacheTime, s.maxCacheTime, entry.UpdatedAt)
+		//s.logger.Printf("requestid %v cache %q age=%v cache_time=%v max_cache_time=%v updated_at=%v", requestID, key, age, s.cacheTime, s.maxCacheTime, entry.UpdatedAt)
 		if age < s.cacheTime {
 			s.logEvent(ctx, mwslog.LogEvent{
 				RequestID: requestID,
