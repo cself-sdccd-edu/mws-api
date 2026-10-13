@@ -2,7 +2,7 @@
   "addr": ":6767",
   "system_version": "staging",
   "server_number": 2,
-  "sql_server": "DCDB03\\WEBAPPS_STAGING",
+  "sql_server": "DCDB03.sdccd.loc\\WEBAPPS_STAGING",
   "sql_database": "MWSAPI_STG",
   "sql_trust_server_certificate": true,
   "cache_warmup": false,
@@ -12,7 +12,7 @@
   "refresh_timeout": 120,
   "qas_domain": "https://csuat.sdccd.edu",
   "qas_url_suffix": "/PSIGW/RESTListeningConnector/PSFT_CS/ExecuteQuery.v1/PUBLIC/{QUERY_NAME}/JSON/NONFILE?",
-  "require_auth": true,
+  "require_auth": false,
   "auth_header": "X-NDnerBYETrTEHL6F",
   "cors_origins": [
     "https://www.sdccd.edu",
