@@ -18,22 +18,22 @@ func (s *Server) endpointHandler(w http.ResponseWriter, r *http.Request) {
 	career := r.URL.Query().Get("career")
 
 	if term == "" {
-		http.Error(w, "missing term parameter", http.StatusBadRequest)
+		badRequest(w, "missing term parameter")
 		return
 	}
 
 	if !validTerm(term) {
-		http.Error(w, "invalid term parameter", http.StatusBadRequest)
+		badRequest(w, "invalid term parameter")
 		return
 	}
 
 	if career == "" {
-		http.Error(w, "missing career parameter", http.StatusBadRequest)
+		badRequest(w, "missing career parameter")
 		return
 	}
 
 	if career != "ugrd" && career != "ce" {
-		http.Error(w, "invalid career parameter", http.StatusBadRequest)
+		badRequest(w, "invalid career parameter")
 		return
 	}
 
@@ -84,22 +84,22 @@ func (s *Server) scheduleHandler(w http.ResponseWriter, r *http.Request) {
 	career := r.URL.Query().Get("career")
 
 	if term == "" {
-		http.Error(w, "missing term parameter", http.StatusBadRequest)
+		badRequest(w, "missing term parameter")
 		return
 	}
 
 	if !validTerm(term) {
-		http.Error(w, "invalid term parameter", http.StatusBadRequest)
+		badRequest(w, "invalid term parameter")
 		return
 	}
 
 	if career == "" {
-		http.Error(w, "missing career parameter", http.StatusBadRequest)
+		badRequest(w, "missing career paremeter")
 		return
 	}
 
 	if career != "ugrd" && career != "ce" {
-		http.Error(w, "invalid career parameter", http.StatusBadRequest)
+		badRequest(w, "invalid career parameter")
 		return
 	}
 
@@ -131,10 +131,6 @@ func (s *Server) scheduleHandler(w http.ResponseWriter, r *http.Request) {
 		s.writeInternalError(w, r, "unable to retrieve schedule data", err)
 		return
 	}
-
-	// I don't want to write this to the client/browser. I want to write the JSON form entry.Data
-	//fmt.Fprintln(w, "/schedule endpoint. params: term=", term, "career=", career)
-	//fmt.Fprintln(w, "entry updated at", entry.UpdatedAt)
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	if _, err := w.Write(entry.Data); err != nil {

@@ -73,6 +73,7 @@ func requestMiddleware(logger mwslog.Logger, next http.Handler) http.Handler {
 			StatusCode: recorder.statusCode,
 			DurationMs: int(duration.Milliseconds()),
 			Message:    "request completed",
+			Details:    recorder.details,
 		}
 
 		if err := logger.Log(ctx, event); err != nil {
