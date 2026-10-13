@@ -136,6 +136,14 @@ Verify access from another machine.
 nc -vz mwsapi01.sdccd.edu 6767
 ```
 
+## Updating
+When there is a new release all you need to do is download the new release, install it, and restart the service.
+```bash
+curl -L https://github.com/cself-sdccd-edu/mws-api/releases/latest/download/mws-api -o /tmp/mws-api
+sudo install -m 755 /tmp/mws-api /usr/local/bin/mws-api
+sudo systemctl restart mws-api.service
+```
+
 
 
 
