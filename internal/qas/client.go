@@ -56,7 +56,7 @@ func (c *HTTPClient) Query(ctx context.Context, query QueryRequest) ([]byte, err
 	}
 
 	requestURL := strings.TrimRight(c.domain, "/") + suffix + strings.Join(urlQuery, "&")
-
+	//fmt.Printf("Request URL: %s", requestURL)
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, requestURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create QAS request: %w", err)
