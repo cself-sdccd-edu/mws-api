@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 set -a; source .env; set +a
 
-TERM="2267"
+TERM="2273"
 #CAREER="ugrd"
 CAREER="${1:-ugrd}"
 URL="http://localhost:6767"
+#URL="https://mws-api.staging.sdccd.edu"
 ENDPOINT="/schedule"
 
 curl -sS -w "Request 1: HTTP %{http_code}, %{time_total}s\n" -o /tmp/mws-api-test-1.out -H "X-NDnerBYETrTEHL6F: $MWSAPI_AUTH_SECRET" "${URL}${ENDPOINT}?term=$TERM&career=$CAREER" &
